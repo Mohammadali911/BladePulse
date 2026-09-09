@@ -1,0 +1,63 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Secure S3 data lake foundation for the BladePulse portfolio project.
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: BladePulse
+    Description: Project tag applied to all resources.
+
+  EnvironmentName:
+    Type: String
+    Default: sandbox
+    Description: Environment tag applied to all resources.
+
+Resources:
+  DataLakeBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+
+      VersioningConfiguration:
+        Status: Enabled
+
+      LifecycleConfiguration:
+        Rules:
+          - Id: AbortIncompleteMultipartUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 7
+
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Environment
+          Value: !Ref EnvironmentName
+        - Key: CostCenter
+          Value: Portfolio
+        - Key: ManagedBy
+          Value: CloudFormation
+
+Outputs:
+  DataLakeBucketName:
+    Description: Name of the BladePulse S3 data lake bucket.
+    Value: !Ref DataLakeBucket
+
+  DataLakeBucketArn:
+    Description: ARN of the BladePulse S3 data lake bucket.
+    Value: !GetAtt DataLakeBucket.Arn
